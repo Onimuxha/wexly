@@ -9,7 +9,7 @@ import "./globals.css"
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" })
 
 export const metadata: Metadata = {
-  title: "Weekly Planner | កាលវិភាគប្រចាំសប្តាហ៍",
+  title: "Wexly",
   description: "A modern weekly schedule planner app with drag-and-drop, random schedule generation, and PWA support.",
   generator: "v0.app",
   manifest: "/manifest.json",
@@ -19,22 +19,22 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://weekly-planner.app",
-    title: "Weekly Planner | កាលវិភាគប្រចាំសប្តាហ៍",
+    title: "Wexly",
     description:
       "A modern weekly schedule planner app with drag-and-drop, random schedule generation, and PWA support.",
-    siteName: "Weekly Planner",
+    siteName: "Wexly",
     images: [
       {
         url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
+        width: 630,
+        height: 1200,
         alt: "Weekly Planner Preview",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Weekly Planner | កាលវិភាគប្រចាំសប្តាហ៍",
+    title: "Wexly",
     description:
       "A modern weekly schedule planner app with drag-and-drop, random schedule generation, and PWA support.",
     images: ["/og-image.jpg"],
