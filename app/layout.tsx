@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://weekly-planner.app",
+    url: "https://wexly.vercel.app/",
     title: "Wexly",
     description:
       "A modern weekly schedule planner app with drag-and-drop, random schedule generation, and PWA support.",

@@ -6,24 +6,18 @@ import { Button } from "@/components/ui/button"
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage()
 
+  const toggleLanguage = () => {
+    setLanguage(language === "en" ? "kh" : "en")
+  }
+
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        variant={language === "kh" ? "default" : "secondary"}
-        size="sm"
-        onClick={() => setLanguage("kh")}
-        className="text-sm transition-all duration-300 hover:scale-105"
-      >
-        🇰🇭 ខ្មែរ
-      </Button>
-      <Button
-        variant={language === "en" ? "default" : "secondary"}
-        size="sm"
-        onClick={() => setLanguage("en")}
-        className="text-sm transition-all duration-300 hover:scale-105"
-      >
-        🇺🇸 English
-      </Button>
-    </div>
+    <Button
+      onClick={toggleLanguage}
+      variant="default"
+      size="sm"
+      className="text-sm transition-all duration-300 hover:scale-105"
+    >
+      {language === "en" ? "🇰🇭 ភាសាខ្មែរ" : "🇺🇸 English"}
+    </Button>
   )
 }

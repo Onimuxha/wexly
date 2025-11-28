@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Clock, Type, Languages } from "lucide-react"
 
 interface ActivityModalProps {
   open: boolean
@@ -49,54 +50,89 @@ export function ActivityModal({ open, onClose, onSave, activity }: ActivityModal
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="border-border bg-card">
-        <DialogHeader>
-          <DialogTitle className={language === "kh" ? "font-khmer" : ""}>
+      <DialogContent className="border-border bg-card sm:max-w-md">
+        <DialogHeader className="space-y-3 pb-2">
+          <DialogTitle className={`text-2xl font-bold ${language === "kh" ? "font-khmer" : ""}`}>
             {activity ? t.editActivity : t.addActivity}
           </DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            {activity ? "Update your activity details" : "Create a new activity for your planner"}
+          </p>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">English Name</Label>
+
+        <div className="space-y-5 py-4">
+          {/* English Name */}
+          <div className="space-y-2.5">
+            <Label htmlFor="name" className="text-sm font-semibold flex items-center gap-2">
+              <Type className="h-4 w-4 text-primary" />
+              English Name
+            </Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Activity name"
-              className="bg-secondary"
+              placeholder="e.g., Morning Exercise"
+              className="bg-muted/50 border-muted-foreground/20 focus:border-primary h-11 px-4"
+              autoFocus
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="nameKh" className="font-khmer">
+
+          {/* Khmer Name */}
+          <div className="space-y-2.5">
+            <Label htmlFor="nameKh" className="text-sm font-semibold flex items-center gap-2 font-khmer">
+              <Languages className="h-4 w-4 text-primary" />
               ឈ្មោះខ្មែរ
             </Label>
             <Input
               id="nameKh"
               value={nameKh}
               onChange={(e) => setNameKh(e.target.value)}
-              placeholder="ឈ្មោះសកម្មភាព"
-              className="bg-secondary font-khmer"
+              placeholder="ឧ. ហាត់ប្រាណព្រឹក"
+              className="bg-muted/50 border-muted-foreground/20 focus:border-primary h-11 px-4 font-khmer"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="duration">{t.duration}</Label>
-            <Input
-              id="duration"
-              type="number"
-              min={5}
-              max={240}
-              value={duration}
-              onChange={(e) => setDuration(Number(e.target.value))}
-              className="bg-secondary"
-            />
+
+          {/* Duration */}
+          <div className="space-y-2.5">
+            <Label htmlFor="duration" className={`text-sm font-semibold flex items-center gap-2 ${language === "kh" ? "font-khmer" : ""}`}>
+              <Clock className="h-4 w-4 text-primary" />
+              {t.duration}
+            </Label>
+            <div className="relative">
+              <Input
+                id="duration"
+                type="text"
+                min={5}
+                max={240}
+                value={duration}
+                onChange={(e) => setDuration(Number(e.target.value))}
+                className="bg-muted/50 border-muted-foreground/20 focus:border-primary h-11 px-4 pr-16"
+              />
+              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium">
+                minutes
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground pl-1">
+              Recommended: 15-60 minutes per activity
+            </p>
           </div>
         </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={onClose}>
-            {t.cancel}
+
+        {/* Actions */}
+        <div className="flex gap-3 pt-2">
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="flex-1 h-11"
+          >
+            <span className={language === "kh" ? "font-khmer" : ""}>{t.cancel}</span>
           </Button>
-          <Button onClick={handleSave} disabled={!name.trim()}>
-            {t.save}
+          <Button 
+            onClick={handleSave} 
+            disabled={!name.trim()}
+            className="flex-1 h-11 font-semibold"
+          >
+            <span className={language === "kh" ? "font-khmer" : ""}>{t.save}</span>
           </Button>
         </div>
       </DialogContent>
