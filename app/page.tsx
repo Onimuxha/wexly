@@ -225,16 +225,21 @@ function ScheduleApp() {
     <div className="flex flex-col min-h-screen bg-background">
       <Header {...({ title: t.title } as any)} />
       <main className="flex-1 container mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-col items-stretch sm:items-center gap-2">
           <ActivitiesManager
             activities={activities}
             onUpdateActivities={handleUpdateActivities}
           />
-          <Button className="flex items-center gap-2" onClick={handleGenerateSchedule}>
+
+          <Button
+            className="flex items-center gap-2 w-full sm:w-auto"
+            onClick={handleGenerateSchedule}
+          >
             <IconSparkles className="size-4 shrink-0" />
             <span className="leading-none">{t.generateSchedule}</span>
           </Button>
         </div>
+
         <WeeklySchedule
           schedules={schedules}
           onToggleDayOff={handleToggleDayOff}
