@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "Wexly",
     description:
       "A modern weekly schedule planner app with drag-and-drop, random schedule generation, and PWA support.",
