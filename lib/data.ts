@@ -90,11 +90,11 @@ export const translations = {
     settings: "ការកំណត់",
     manageActivities: "គ្រប់គ្រងសកម្មភាព",
     startTime: "ម៉ោងចាប់ផ្តើម",
-    dayStartTime: "ម៉ោងចាប់ផ្តើមថ្ងៃ",
+    dayStartTime: "ម៉ោងចាប់ផ្តើម",
     editSchedule: "កែម៉ោង",
     reminderSet: "បានកំណត់ការរំលឹក",
     reminderDescription: "អ្នកនឹងទទួលបានការជូនដំណឹងនៅម៉ោង",
     notificationPermission: "សូមអនុញ្ញាតការជូនដំណឹង",
-    editDayTime: "កែម៉ោងថ្ងៃ",
+    editDayTime: "កែម៉ោងចាប់ផ្ដើម",
   },
 }

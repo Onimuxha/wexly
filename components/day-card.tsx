@@ -15,159 +15,24 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-  useSortable,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import {
   type DaySchedule,
   daysOfWeek,
   type ScheduledActivity,
 } from "@/lib/data";
 import { useLanguage } from "@/lib/language-context";
-import {
-  isToday,
-  requestNotificationPermission,
-  scheduleNotification,
-  parseTime,
-} from "@/lib/schedule-utils";
+import { isToday, requestNotificationPermission } from "@/lib/schedule-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  IconBell,
-  IconBellOff,
   IconBriefcase,
-  IconClock,
-  IconGripVertical,
   IconSettings2,
   IconBriefcaseOff,
 } from "@tabler/icons-react";
-import { PlayfulCheckbox } from "./ui/playful-checkbox";
-
-function SortableActivity({
-  activity,
-  onToggle,
-  onRemind,
-  onEditTime,
-  language,
-}: {
-  activity: ScheduledActivity;
-  onToggle: () => void;
-  onRemind: () => void;
-  onEditTime: () => void;
-  language: string;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: activity.id });
-  const [hasReminder, setHasReminder] = useState<boolean>(
-    () => !!(activity as any).hasReminder
-  );
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  const handleReminderToggle = async () => {
-    if (!hasReminder) {
-      const permitted = await requestNotificationPermission();
-      if (permitted) {
-        setHasReminder(true);
-        const activityName =
-          language === "kh" ? activity.nameKh : activity.name;
-        const { hours, minutes } = parseTime(activity.startTime);
-        const now = new Date();
-        const scheduledTime = new Date();
-        scheduledTime.setHours(hours, minutes, 0, 0);
-
-        if (scheduledTime <= now) {
-          scheduledTime.setDate(scheduledTime.getDate() + 1);
-        }
-
-        const delayMs = scheduledTime.getTime() - now.getTime();
-        scheduleNotification(
-          "Activity Reminder",
-          `Time to: ${activityName}`,
-          delayMs
-        );
-        onRemind();
-      }
-    } else {
-      setHasReminder(false);
-      onRemind();
-    }
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`group flex items-start gap-2 rounded-md border border-border bg-secondary/50 p-2 transition-all duration-200 hover:border-primary/30 ${
-        activity.completed ? "opacity-60" : ""
-      } ${isDragging ? "opacity-50 shadow-lg z-50" : ""}`}
-    >
-      <button
-        {...attributes}
-        {...listeners}
-        className="mt-0.5 cursor-grab touch-none text-muted-foreground transition-colors hover:text-foreground active:cursor-grabbing"
-      >
-        <IconGripVertical className="h-4 w-4" />
-      </button>
-      <div className="flex flex-col gap-1 w-full">
-        <PlayfulCheckbox
-          id={`activity-${activity.id}`}
-          checked={activity.completed}
-          onCheckedChange={onToggle}
-          svgWidth={340}
-          label={
-            <div className="flex-1 min-w-0">
-              <p
-                className={`
-    text-sm font-medium
-    ${language === "kh" ? "font-khmer" : ""}
-    ${activity.completed ? "text-muted-foreground" : "text-foreground"}`}>
-                {language === "kh" ? activity.nameKh : activity.name}
-              </p>
-            </div>
-          }
-        />
-        <button
-          onClick={onEditTime}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors ml-[1.9rem]"
-        >
-          <IconClock className="h-3 w-3" />
-          {activity.startTime} - {activity.endTime}
-        </button>
-      </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={handleReminderToggle}
-        title={hasReminder ? "Reminder enabled" : "Reminder disabled"}
-      >
-        {hasReminder ? (
-          <IconBell size={30} className="text-yellow-500" />
-        ) : (
-          <IconBellOff size={30} className="text-muted-foreground" />
-        )}
-      </Button>
-    </div>
-  );
-}
+import { SortableActivity } from "./SortableActivity";
+import { EditActivityDialog, EditDayTimeDialog } from "./EditDoalogs";
 
 interface DayCardProps {
   date: Date;
@@ -208,7 +73,6 @@ export function DayCard({
   const [newStartTime, setNewStartTime] = useState("");
   const [dayStartTime, setDayStartTime] = useState("");
 
-  // Request notification permission on component mount
   useEffect(() => {
     requestNotificationPermission();
   }, []);
@@ -363,77 +227,35 @@ export function DayCard({
         </CardContent>
       </Card>
 
-      <Dialog
-        open={!!editingActivity}
-        onOpenChange={() => setEditingActivity(null)}
-      >
-        <DialogContent className="border-border bg-card">
-          <DialogHeader>
-            <DialogTitle className={language === "kh" ? "font-khmer" : ""}>
-              {t.editSchedule}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p
-              className={`font-medium ${language === "kh" ? "font-khmer" : ""}`}
-            >
-              {language === "kh"
-                ? editingActivity?.nameKh
-                : editingActivity?.name}
-            </p>
-            <div className="space-y-2">
-              <Label htmlFor="startTime">{t.startTime}</Label>
-              <Input
-                id="startTime"
-                type="time"
-                value={newStartTime}
-                onChange={(e) => setNewStartTime(e.target.value)}
-                className="bg-secondary"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => setEditingActivity(null)}
-            >
-              {t.cancel}
-            </Button>
-            <Button onClick={handleSaveActivityTime}>{t.save}</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EditActivityDialog
+        activity={editingActivity}
+        newStartTime={newStartTime}
+        language={language}
+        onClose={() => setEditingActivity(null)}
+        onSave={handleSaveActivityTime}
+        onTimeChange={setNewStartTime}
+        translations={{
+          editSchedule: t.editSchedule,
+          startTime: t.startTime,
+          cancel: t.cancel,
+          save: t.save,
+        }}
+      />
 
-      <Dialog open={editingDayTime} onOpenChange={setEditingDayTime}>
-        <DialogContent className="border-border bg-card">
-          <DialogHeader>
-            <DialogTitle className={language === "kh" ? "font-khmer" : ""}>
-              {t.editDayTime}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="dayStartTime">{t.dayStartTime}</Label>
-              <Input
-                id="dayStartTime"
-                type="time"
-                value={dayStartTime}
-                onChange={(e) => setDayStartTime(e.target.value)}
-                className="bg-secondary"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => setEditingDayTime(false)}
-            >
-              {t.cancel}
-            </Button>
-            <Button onClick={handleSaveDayTime}>{t.save}</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EditDayTimeDialog
+        isOpen={editingDayTime}
+        dayStartTime={dayStartTime}
+        language={language}
+        onClose={() => setEditingDayTime(false)}
+        onSave={handleSaveDayTime}
+        onTimeChange={setDayStartTime}
+        translations={{
+          editDayTime: t.editDayTime,
+          dayStartTime: t.dayStartTime,
+          cancel: t.cancel,
+          save: t.save,
+        }}
+      />
     </>
   );
 }
