@@ -1,6 +1,10 @@
-// public/sw.js - Complete Service Worker with Caching + Notifications
+// public/sw.js - Clean Service Worker with Persistent Notifications
 
 const CACHE_NAME = "wexly-v1";
+const DB_NAME = "NotificationsDB";
+const DB_VERSION = 1;
+const STORE_NAME = "scheduled_notifications";
+
 const urlsToCache = [
   "/",
   "/manifest.json",
@@ -9,54 +13,88 @@ const urlsToCache = [
 ];
 
 // ============================================
+// INDEXEDDB FOR PERSISTENT STORAGE
+// ============================================
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+  });
+}
+
+async function saveNotification(notification) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.put(notification);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getAllNotifications() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], 'readonly');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.getAll();
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function deleteNotification(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction([STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(STORE_NAME);
+    const request = store.delete(id);
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// ============================================
 // INSTALLATION & CACHING
 // ============================================
 
 self.addEventListener("install", (event) => {
-  console.log('[SW] Installing...');
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching app shell');
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
   );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
-  console.log('[SW] Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
           .filter((name) => name !== CACHE_NAME)
-          .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
-          })
+          .map((name) => caches.delete(name))
       );
     })
   );
   self.clients.claim();
+  startNotificationChecker();
 });
 
 // ============================================
-// FETCH HANDLING (Network First, Cache Fallback)
+// FETCH HANDLING
 // ============================================
 
 self.addEventListener("fetch", (event) => {
-  // Don't cache POST, PUT, DELETE requests
-  if (event.request.method !== 'GET') {
-    console.log('[SW] Skipping cache for non-GET request:', event.request.method);
-    return;
-  }
-
-  // Don't cache chrome extension requests
-  if (event.request.url.startsWith('chrome-extension://')) {
-    return;
-  }
-
-  // Don't cache API calls or dynamic routes (optional - adjust as needed)
+  if (event.request.method !== 'GET') return;
+  if (event.request.url.startsWith('chrome-extension://')) return;
   if (event.request.url.includes('/api/') || event.request.url.includes('/_next/data/')) {
     event.respondWith(fetch(event.request));
     return;
@@ -65,36 +103,21 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Only cache successful responses
         if (!response || response.status !== 200 || response.type === 'error') {
           return response;
         }
-
-        // Clone the response before caching
         const clone = response.clone();
-        
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, clone).catch((err) => {
-            console.warn('[SW] Failed to cache:', event.request.url, err);
-          });
+          cache.put(event.request, clone).catch(() => {});
         });
-        
         return response;
       })
       .catch(() => {
-        // If network fails, try cache
         return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) {
-            console.log('[SW] Serving from cache:', event.request.url);
-            return cachedResponse;
-          }
-          // Return offline message
-          return new Response('Offline - Content not cached', {
+          if (cachedResponse) return cachedResponse;
+          return new Response('Offline', {
             status: 503,
-            statusText: 'Service Unavailable',
-            headers: new Headers({
-              'Content-Type': 'text/plain',
-            }),
+            headers: new Headers({ 'Content-Type': 'text/plain' }),
           });
         });
       })
@@ -102,148 +125,126 @@ self.addEventListener("fetch", (event) => {
 });
 
 // ============================================
-// BACKGROUND NOTIFICATIONS
+// NOTIFICATION CHECKER (runs every 30 seconds)
 // ============================================
 
-// Store for scheduled notifications
-const scheduledNotifications = new Map();
+let checkerInterval = null;
 
-// Listen for messages from the main thread
-self.addEventListener('message', (event) => {
-  console.log('[SW] Message received:', event.data);
-  
-  if (event.data && event.data.type === 'SCHEDULE_NOTIFICATION') {
+function startNotificationChecker() {
+  if (checkerInterval) clearInterval(checkerInterval);
+  checkNotifications();
+  checkerInterval = setInterval(checkNotifications, 30000);
+}
+
+async function checkNotifications() {
+  try {
+    const notifications = await getAllNotifications();
+    const now = Date.now();
+    
+    for (const notif of notifications) {
+      const triggerTime = new Date(notif.scheduledTime).getTime();
+      if (triggerTime <= now) {
+        await showNotification(notif.title, notif.body, notif.id);
+        await deleteNotification(notif.id);
+      }
+    }
+  } catch (error) {
+    console.error('Notification check error:', error);
+  }
+}
+
+// ============================================
+// MESSAGE HANDLING
+// ============================================
+
+self.addEventListener('message', async (event) => {
+  if (event.data?.type === 'SCHEDULE_NOTIFICATION') {
     const { id, title, body, scheduledTime } = event.data;
-    scheduleNotification(id, title, body, scheduledTime);
-  } else if (event.data && event.data.type === 'CANCEL_NOTIFICATION') {
-    cancelScheduledNotification(event.data.id);
-  } else if (event.data && event.data.type === 'GET_SCHEDULED') {
-    // Send back list of scheduled notifications
-    event.ports[0].postMessage({
-      scheduled: Array.from(scheduledNotifications.keys())
-    });
-  } else if (event.data && event.data.type === 'SKIP_WAITING') {
+    await scheduleNotification(id, title, body, scheduledTime);
+  } else if (event.data?.type === 'CANCEL_NOTIFICATION') {
+    await deleteNotification(event.data.id);
+  } else if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 });
 
-function scheduleNotification(id, title, body, scheduledTime) {
-  // Cancel existing notification with same ID
-  cancelScheduledNotification(id);
-
-  const now = Date.now();
+async function scheduleNotification(id, title, body, scheduledTime) {
   const triggerTime = new Date(scheduledTime).getTime();
+  const now = Date.now();
   const delay = triggerTime - now;
 
-  console.log(`[SW] 📅 Scheduling notification "${title}"`);
-  console.log(`[SW] ⏰ Scheduled for: ${new Date(scheduledTime).toLocaleString()}`);
-  console.log(`[SW] ⏱️  Will trigger in: ${Math.round(delay / 1000)} seconds`);
-
   if (delay <= 0) {
-    // Send immediately if time has passed
-    console.log('[SW] ⚡ Time has passed, sending immediately');
-    showNotification(title, body, id);
+    await showNotification(title, body, id);
     return;
   }
 
-  // Schedule for future (max timeout is ~24.8 days)
-  if (delay > 2147483647) {
-    console.warn('[SW] ⚠️  Delay too long, capping at max timeout');
-    return;
-  }
-
-  const timeoutId = setTimeout(() => {
-    console.log(`[SW] 🔔 Triggering scheduled notification: ${title}`);
-    showNotification(title, body, id);
-    scheduledNotifications.delete(id);
-  }, delay);
-
-  scheduledNotifications.set(id, {
-    timeoutId,
+  await saveNotification({
+    id,
     title,
     body,
     scheduledTime,
+    createdAt: new Date().toISOString()
   });
 
-  console.log(`[SW] ✅ Total scheduled: ${scheduledNotifications.size} notifications`);
-}
-
-function cancelScheduledNotification(id) {
-  const notification = scheduledNotifications.get(id);
-  if (notification) {
-    clearTimeout(notification.timeoutId);
-    scheduledNotifications.delete(id);
-    console.log(`[SW] 🚫 Cancelled notification: ${id}`);
+  // Backup timeout for near-future notifications
+  if (delay < 3600000) {
+    setTimeout(async () => {
+      const notifications = await getAllNotifications();
+      if (notifications.find(n => n.id === id)) {
+        await showNotification(title, body, id);
+        await deleteNotification(id);
+      }
+    }, delay);
   }
 }
 
-function showNotification(title, body, tag) {
-  console.log(`[SW] 🔔 Showing notification: ${title}`);
-  
-  const options = {
-    body: body,
-    icon: '/icon-192x192.jpg',
-    badge: '/icon-192x192.jpg',
-    vibrate: [200, 100, 200, 100, 200],
-    tag: tag || 'activity-reminder',
-    requireInteraction: true,
-    silent: false,
-    actions: [
-      { action: 'open', title: '📱 Open App' },
-      { action: 'close', title: '✖️ Dismiss' }
-    ],
-    data: {
-      dateOfArrival: Date.now(),
-      url: '/',
-    }
-  };
-
-  self.registration.showNotification(title, options)
-    .then(() => {
-      console.log('[SW] ✅ Notification shown successfully');
-    })
-    .catch((error) => {
-      console.error('[SW] ❌ Error showing notification:', error);
+async function showNotification(title, body, tag) {
+  try {
+    await self.registration.showNotification(title, {
+      body: body,
+      icon: '/icon-192x192.jpg',
+      badge: '/icon-192x192.jpg',
+      vibrate: [300, 200, 300, 200, 300],
+      tag: tag || 'activity-reminder',
+      requireInteraction: true,
+      silent: false,
+      renotify: true,
+      actions: [
+        { action: 'open', title: 'Open' },
+        { action: 'dismiss', title: 'Dismiss' }
+      ],
+      data: { url: '/' }
     });
+  } catch (error) {
+    console.error('Show notification error:', error);
+  }
 }
 
-// Handle notification click
+// ============================================
+// NOTIFICATION INTERACTION
+// ============================================
+
 self.addEventListener('notificationclick', (event) => {
-  console.log('[SW] 👆 Notification clicked:', event.action);
-  
   event.notification.close();
+  if (event.action === 'dismiss') return;
 
-  if (event.action === 'close') {
-    return;
-  }
-
-  // Open or focus the app
   event.waitUntil(
-    self.clients.matchAll({ 
-      type: 'window', 
-      includeUncontrolled: true 
-    }).then((clientList) => {
-      // If app is already open, focus it
-      for (let i = 0; i < clientList.length; i++) {
-        const client = clientList[i];
-        if (client.url === '/' || client.url.includes(self.registration.scope)) {
-          console.log('[SW] 🎯 Focusing existing window');
-          return client.focus();
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        for (let client of clientList) {
+          if (client.url === '/' || client.url.includes(self.registration.scope)) {
+            return client.focus();
+          }
         }
-      }
-      // Otherwise open new window
-      if (self.clients.openWindow) {
-        console.log('[SW] 🪟 Opening new window');
-        return self.clients.openWindow('/');
-      }
-    })
+        if (self.clients.openWindow) {
+          return self.clients.openWindow('/');
+        }
+      })
   );
 });
 
-// Handle notification close
 self.addEventListener('notificationclose', (event) => {
-  console.log('[SW] ❌ Notification closed:', event.notification.tag);
+  // Notification closed
 });
 
-// Log when service worker is ready
-console.log('[SW] 🚀 Service Worker loaded and ready for notifications!');
+startNotificationChecker();

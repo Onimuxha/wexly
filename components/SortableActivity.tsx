@@ -8,7 +8,6 @@ import {
   requestBackgroundNotificationPermission,
   scheduleBackgroundNotification,
   cancelBackgroundNotification,
-  backgroundNotifications,
 } from "@/lib/background-notifications";
 import { AlarmAdd, AlarmRemove, ClockCircle, ListVertical } from "@solar-icons/react";
 
@@ -47,7 +46,6 @@ export function SortableActivity({
   );
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Cleanup notification when component unmounts
   useEffect(() => {
     return () => {
       if (hasReminder) {
@@ -66,59 +64,27 @@ export function SortableActivity({
     const toast = document.createElement('div');
     toast.className = `fixed bottom-4 right-4 ${
       isSuccess ? 'bg-green-500' : 'bg-red-500'
-    } text-white px-4 py-3 rounded-lg shadow-lg z-[9999] flex items-center gap-2 font-medium animate-in fade-in slide-in-from-bottom-2`;
-    toast.innerHTML = `
-      <span>${message}</span>
-    `;
+    } text-white px-4 py-3 rounded-lg shadow-lg z-[9999] font-medium`;
+    toast.textContent = message;
     document.body.appendChild(toast);
-    
-    setTimeout(() => {
-      toast.classList.add('animate-out', 'fade-out', 'slide-out-to-bottom-2');
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
+    setTimeout(() => toast.remove(), 3000);
   };
 
   const handleReminderToggle = async () => {
-    if (isProcessing) {
-      console.log('Already processing, please wait...');
-      return;
-    }
-    
+    if (isProcessing) return;
     setIsProcessing(true);
 
     try {
       if (!hasReminder) {
-        console.log('=== ENABLING REMINDER ===');
-        
-        // Check if service worker is ready
-        if (!backgroundNotifications.isReady()) {
-          console.log('Service worker not ready, initializing...');
-          showToast('⏳ Initializing notifications...', true);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-
-        // Request permission
-        console.log('Requesting permission...');
         const permitted = await requestBackgroundNotificationPermission();
         
         if (!permitted) {
-          console.error('Permission denied');
-          showToast('❌ Notifications blocked. Check browser settings.', false);
+          showToast('Please enable notifications in browser settings', false);
           setIsProcessing(false);
           return;
         }
 
-        console.log('Permission granted, scheduling notification...');
-
-        // Schedule the background notification
         const activityName = language === "kh" ? activity.nameKh : activity.name;
-        
-        console.log('Activity details:', {
-          id: activity.id,
-          name: activityName,
-          time: activity.startTime,
-        });
-
         const success = await scheduleBackgroundNotification(
           activity.id,
           activityName,
@@ -128,25 +94,18 @@ export function SortableActivity({
         if (success) {
           setHasReminder(true);
           onRemind();
-          showToast(`✅ Reminder set for ${activity.startTime}`, true);
-          console.log('✅ Reminder enabled successfully');
+          showToast(`Reminder set for ${activity.startTime}`, true);
         } else {
-          console.error('Failed to schedule notification');
-          showToast('❌ Failed to set reminder. Check console for errors.', false);
+          showToast('Failed to set reminder', false);
         }
       } else {
-        console.log('=== DISABLING REMINDER ===');
-        
-        // Cancel the notification
         cancelBackgroundNotification(activity.id);
         setHasReminder(false);
         onRemind();
-        showToast('🔕 Reminder cancelled', true);
-        console.log('✅ Reminder disabled successfully');
+        showToast('Reminder cancelled', true);
       }
     } catch (error) {
-      console.error('❌ Reminder error:', error);
-      showToast('❌ Something went wrong. Check console.', false);
+      showToast('Something went wrong', false);
     } finally {
       setIsProcessing(false);
     }
@@ -202,11 +161,7 @@ export function SortableActivity({
         size="icon"
         onClick={handleReminderToggle}
         disabled={isProcessing}
-        title={
-          hasReminder 
-            ? "🔔 Reminder ON - You'll get notified even if browser is closed!" 
-            : "Click to set a reminder for this activity"
-        }
+        title={hasReminder ? "Reminder enabled" : "Set reminder"}
         className="transition-all duration-150 hover:scale-110 active:scale-95 disabled:opacity-50"
       >
         {isProcessing ? (
