@@ -89,6 +89,83 @@ export function ModernTimePicker({
     emit(hours, minutes, np);
   };
 
+  const handleHourInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    if (value === "") {
+      setHours("");
+      return;
+    }
+    let num = parseInt(value, 10);
+    if (isNaN(num)) return;
+    // Don't validate min/max while typing, just store the value
+    const nh = value.length === 1 ? value : pad(num);
+    setHours(nh);
+    if (num <= 12 && num >= 1) {
+      emit(pad(num), minutes, period);
+    }
+  };
+
+  const handleMinuteInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    if (value === "") {
+      setMinutes("");
+      return;
+    }
+    let num = parseInt(value, 10);
+    if (isNaN(num)) return;
+    // Don't validate min/max while typing, just store the value
+    const nm = value.length === 1 ? value : pad(num);
+    setMinutes(nm);
+    if (num <= 59 && num >= 0) {
+      emit(hours, pad(num), period);
+    }
+  };
+
+  const handleHourBlur = () => {
+    let num = parseInt(hours, 10);
+    if (hours === "" || isNaN(num)) {
+      setHours("01");
+      emit("01", minutes, period);
+    } else if (num > 12) {
+      const nh = pad(12);
+      setHours(nh);
+      emit(nh, minutes, period);
+    } else if (num < 1) {
+      const nh = pad(1);
+      setHours(nh);
+      emit(nh, minutes, period);
+    } else {
+      const nh = pad(num);
+      setHours(nh);
+      emit(nh, minutes, period);
+    }
+    if (minutes === "") setMinutes("00");
+  };
+
+  const handleMinuteBlur = () => {
+    let num = parseInt(minutes, 10);
+    if (minutes === "" || isNaN(num)) {
+      setMinutes("00");
+      emit(hours, "00", period);
+    } else if (num > 59) {
+      const nm = pad(59);
+      setMinutes(nm);
+      emit(hours, nm, period);
+    } else if (num < 0) {
+      const nm = pad(0);
+      setMinutes(nm);
+      emit(hours, nm, period);
+    } else {
+      const nm = pad(num);
+      setMinutes(nm);
+      emit(hours, nm, period);
+    }
+  };
+
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.currentTarget.select();
+  };
+
   return (
     <div ref={ref} className={`relative ${className}`}>
       <button
@@ -122,11 +199,16 @@ export function ModernTimePicker({
                   >
                     <AltArrowUp weight="LineDuotone" className="h-5 w-5 text-foreground" />
                   </button>
-                  <div className="w-20 h-16 flex items-center justify-center bg-primary/10 border border-primary/20 rounded-xl">
-                    <span className="text-3xl font-bold text-primary tabular-nums">
-                      {hours}
-                    </span>
-                  </div>
+                  <input
+                    type="number"
+                    min="1"
+                    max="12"
+                    value={hours}
+                    onChange={handleHourInput}
+                    onBlur={handleHourBlur}
+                    onFocus={handleInputFocus}
+                    className="w-20 h-16 flex items-center justify-center bg-primary/10 border border-primary/20 rounded-xl text-3xl font-bold text-primary text-center tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/50 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
                   <button
                     onClick={() => changeHour(-1)}
                     className="p-2 hover:bg-secondary rounded-md"
@@ -149,11 +231,16 @@ export function ModernTimePicker({
                   >
                     <AltArrowUp weight="LineDuotone" className="h-5 w-5 text-foreground" />
                   </button>
-                  <div className="w-20 h-16 flex items-center justify-center bg-primary/10 border border-primary/20 rounded-xl">
-                    <span className="text-3xl font-bold text-primary tabular-nums">
-                      {minutes}
-                    </span>
-                  </div>
+                  <input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={minutes}
+                    onChange={handleMinuteInput}
+                    onBlur={handleMinuteBlur}
+                    onFocus={handleInputFocus}
+                    className="w-20 h-16 flex items-center justify-center bg-primary/10 border border-primary/20 rounded-xl text-3xl font-bold text-primary text-center tabular-nums focus:outline-none focus:ring-2 focus:ring-primary/50 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
                   <button
                     onClick={() => changeMinute(-5)}
                     className="p-2 hover:bg-secondary rounded-md"
