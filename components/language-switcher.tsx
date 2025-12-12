@@ -17,7 +17,7 @@ export function LanguageSwitcher() {
       size="sm"
       className="text-sm transition-all duration-300 hover:scale-105"
     >
-      {language === "en" ? "🇰🇭 ភាសាខ្មែរ" : "🇺🇸 English"}
+      {language === "en" ? "🇰🇭 Khmer" : "🇺🇸 English"}
     </Button>
   )
 }

@@ -94,7 +94,6 @@ export function SortableActivity({
         if (success) {
           setHasReminder(true);
           onRemind();
-          showToast(`Reminder set for ${activity.startTime}`, true);
         } else {
           showToast('Failed to set reminder', false);
         }

@@ -185,17 +185,6 @@ async function scheduleNotification(id, title, body, scheduledTime) {
     scheduledTime,
     createdAt: new Date().toISOString()
   });
-
-  // Backup timeout for near-future notifications
-  if (delay < 3600000) {
-    setTimeout(async () => {
-      const notifications = await getAllNotifications();
-      if (notifications.find(n => n.id === id)) {
-        await showNotification(title, body, id);
-        await deleteNotification(id);
-      }
-    }, delay);
-  }
 }
 
 async function showNotification(title, body, tag) {
