@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     siteName: "Wexly",
     images: [
       {
-        url: "https://wexly.vercel.app/icon-512x512.jpg?v=1",
+        url: "https://wexly.vercel.app/icon-512x512.png?v=1",
         width: 512,
         height: 512,
         alt: " Wexly Preview",
@@ -37,15 +37,15 @@ export const metadata: Metadata = {
     title: "Wexly",
     description:
       "A modern weekly schedule planner app with drag-and-drop, random schedule generation, and PWA support.",
-    images: ["https://wexly.vercel.app/icon-512x512.jpg?v=1"]
+    images: ["https://wexly.vercel.app/icon-512x512.png?v=1"]
 
   },
   icons: {
     icon: [
-      { url: "/icon-192x192.jpg", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512x512.jpg", sizes: "512x512", type: "image/png" },
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: "/apple-touch-icon.jpg",
+    apple: "/apple-touch-icon.png",
   },
 }
 

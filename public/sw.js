@@ -8,8 +8,8 @@ const STORE_NAME = "scheduled_notifications";
 const urlsToCache = [
   "/",
   "/manifest.json",
-  "/icon-192x192.jpg",
-  "/icon-512x512.jpg",
+  "/icon-192x192.png",
+  "/icon-512x512.png",
 ];
 
 // ============================================
@@ -191,8 +191,8 @@ async function showNotification(title, body, tag) {
   try {
     await self.registration.showNotification(title, {
       body: body,
-      icon: '/icon-192x192.jpg',
-      badge: '/icon-192x192.jpg',
+      icon: '/icon-192x192.png',
+      badge: '/icon-192x192.png',
       vibrate: [300, 200, 300, 200, 300],
       tag: tag || 'activity-reminder',
       requireInteraction: true,
