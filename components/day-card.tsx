@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { SortableActivity } from "./SortableActivity";
 import { EditActivityDialog, EditDayTimeDialog } from "./EditDoalogs";
 import { Case, CupHot, Settings } from "@solar-icons/react";
+import { LineMdCoffeeHalfEmptyTwotoneLoop } from "@/public/animated-icons/icons";
 
 interface DayCardProps {
   date: Date;
@@ -114,18 +115,16 @@ export function DayCard({
   return (
     <>
       <Card
-        className={`transition-all duration-300 ${
-          today
+        className={`transition-all duration-300 ${today
             ? "glow-border border-primary/50 bg-card"
             : "border-border bg-card hover:border-primary/30"
-        }`}
+          }`}
       >
         <CardHeader className="space-y-2 pb-3">
           <div className="flex items-center justify-between">
             <CardTitle
-              className={`text-lg font-medium ${
-                language === "kh" ? "font-khmer" : ""
-              } ${today ? "glow-text text-primary" : ""}`}
+              className={`text-lg font-medium ${language === "kh" ? "font-khmer" : ""
+                } ${today ? "glow-text text-primary" : ""}`}
             >
               {dayName}
             </CardTitle>
@@ -138,8 +137,15 @@ export function DayCard({
                   {t.today}
                 </Badge>
               )}
-              <Button variant="ghost" onClick={handleEditDayTime}>
-                <Settings weight="LineDuotone" className="w-5 h-5 text-white" />
+              <Button
+                variant="ghost"
+                className="group ease-in-out duration-200"
+                onClick={handleEditDayTime}
+              >
+                <Settings
+                  weight="LineDuotone"
+                  className="w-5 h-5 transition-transform duration-200 group-hover:rotate-45"
+                />
               </Button>
             </div>
           </div>
@@ -157,7 +163,7 @@ export function DayCard({
           >
             {isDayOff ? (
               <>
-                <CupHot weight="LineDuotone" className="mr-2 w-5 h-5" />
+                <LineMdCoffeeHalfEmptyTwotoneLoop className="mr-2 h-5 w-5" />
                 <span className={language === "kh" ? "font-khmer" : ""}>
                   {t.dayOff}
                 </span>
@@ -213,9 +219,8 @@ export function DayCard({
             </DndContext>
           ) : (
             <p
-              className={`py-4 text-center text-sm text-muted-foreground ${
-                language === "kh" ? "font-khmer" : ""
-              }`}
+              className={`py-4 text-center text-sm text-muted-foreground ${language === "kh" ? "font-khmer" : ""
+                }`}
             >
               {t.noActivities}
             </p>

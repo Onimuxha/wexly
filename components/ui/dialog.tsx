@@ -4,7 +4,7 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 import { cn } from "@/lib/utils";
-import { CloseCircle } from "@solar-icons/react";
+import { LineMdCloseSmall } from "@/public/animated-icons/icons";
 
 function Dialog({
   ...props
@@ -72,10 +72,7 @@ function DialogContent({
             data-slot="dialog-close"
             className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
           >
-            <CloseCircle
-              weight="LineDuotone"
-              className="h-5 w-5 text-primary"
-            />
+            <LineMdCloseSmall className="h-6 w-6 text-primary" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}

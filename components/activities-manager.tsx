@@ -15,7 +15,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { AddCircle, Clipboard, ClockCircle, CloseCircle, PenNewSquare, TrashBinTrash } from "@solar-icons/react"
+import { Clipboard, ClockCircle, PenNewSquare } from "@solar-icons/react"
+import { LineMdCloseSmall, LineMdEdit, LineMdPlusCircleTwotone, LineMdTrash } from "@/public/animated-icons/icons"
 
 interface ActivitiesManagerProps {
   activities: Activity[]
@@ -98,7 +99,7 @@ export function ActivitiesManager({ activities, onUpdateActivities }: Activities
                 variant="ghost"
                 className="p-2 hover:bg-accent rounded-lg transition-colors"
               >
-                 <CloseCircle weight="LineDuotone" className="h-5 w-5 text-primary" />
+                <LineMdCloseSmall className="h-6 w-6 text-primary" />
               </Button>
             </div>
 
@@ -141,14 +142,14 @@ export function ActivitiesManager({ activities, onUpdateActivities }: Activities
                             className="p-2 hover:bg-primary/20 rounded-lg text-primary transition-colors"
                             title="Edit"
                           >
-                            <PenNewSquare weight="LineDuotone" className="h-5 w-5" />
+                            <LineMdEdit className="h-5 w-5" />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(activity.id)}
                             className="p-2 hover:bg-destructive/20 rounded-lg text-destructive transition-colors"
                             title="Delete"
                           >
-                             <TrashBinTrash weight="LineDuotone" className="h-5 w-5" />
+                             <LineMdTrash className="h-5 w-5" />
                           </button>
                         </div>
                       </div>
@@ -165,7 +166,7 @@ export function ActivitiesManager({ activities, onUpdateActivities }: Activities
                 className="w-full gap-2"
                 size="lg"
               >
-                <AddCircle weight="LineDuotone" className="h-5 w-5" />
+                <LineMdPlusCircleTwotone className="h-5 w-5" />
                 <span className={language === "kh" ? "font-khmer" : ""}>{t.addActivity}</span>
               </Button>
             </div>

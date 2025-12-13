@@ -5,7 +5,7 @@ import * as ToastPrimitives from '@radix-ui/react-toast'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
-import { CloseCircle } from '@solar-icons/react'
+import { LineMdCloseSmall } from '@/public/animated-icons/icons'
 
 const ToastProvider = ToastPrimitives.Provider
 
@@ -83,7 +83,7 @@ const ToastClose = React.forwardRef<
     toast-close=""
     {...props}
   >
-  <CloseCircle weight="LineDuotone" className="h-5 w-5 text-primary" />
+  <LineMdCloseSmall className="h-6 w-6 text-primary" />
   </ToastPrimitives.Close>
 ))
 ToastClose.displayName = ToastPrimitives.Close.displayName
